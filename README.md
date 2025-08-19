@@ -20,7 +20,6 @@ Your main playground will be NodeJS + PostgreSQL, but you’ll also jump into th
 4. Final chat (CEO, ~20m)
 
 ## The Assignment (2 parts)
-
 We simulate a realistic product request. The goal is clear; the details are up to you. We value clarity, simplicity, and execution.
 
 ### Part 1 — Planning (tickets/spec)
@@ -75,15 +74,15 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtbWJqZnl
 
 Treat the key as public and limited to this assignment. Use it only for reading data.
 
+Look at scripts/readData.ts how to read source.
+
 ---
 
 ## Evaluation Criteria
 - Clarity of tickets/spec (assumptions, acceptance criteria, dependencies)
 - Correctness (vaccination extraction, latest date logic, handling missing/duplicate/edge cases)
-- Code quality (readability, structure, types)
-- UX (minimal, fast, easy to understand)
+- Code quality (readability, structure, types, tests)
 - Simplicity (avoid unnecessary complexity)
-- Bonus: tests
 
 What we are not evaluating: pixel‑perfect UI, heavy infra, or complete production hardening.
 
