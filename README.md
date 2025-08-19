@@ -1,18 +1,4 @@
 # VETSTOR Interview Assignment
-
-## About VETSTOR
-
-At [VETSTOR](https://www.vetstor.cz/), we’re on a mission to help pets live longer, healthier lives. Our platform connects veterinarians and pet owners through a personalized online store and smart pet profiles, so every product recommendation is based on real medical data, not guesswork. Vets can recommend and sell high-quality food, supplements, and medications directly through our e-commerce system, giving owners peace of mind that their pets’ nutrition plans are designed by professionals. Think HealthTech meets e-commerce, built for the people who love their pets most.
-
-We’re a young, funded startup with big ambitions. If you want to build tech that actually improves lives (and tails), keep reading.
-
-## The Role
-
-## Job
-We’re looking for a Full-Stack Engineer (Medior++ / Senior) with a love for backend work to join our small but mighty team in Prague (some days in the office, some at home).
-
-Your main playground will be NodeJS + PostgreSQL, but you’ll also jump into the frontend when needed with React, TypeScript, and JavaScript. One week you might be designing a new backend service for AI-powered product recommendations, the next you’ll be tweaking a Shopify app or shipping a new Chrome extension feature. You’ll help keep our infrastructure minimal, clean, and fast, no over-engineered Kubernetes stacks here.
-
 ## Interview Process
 1. Take‑home screening assignment (1–2h)
 2. Screening interview (CPO or HR, ~15m)
@@ -25,22 +11,23 @@ We simulate a realistic product request. The goal is clear; the details are up t
 ### Part 1 — Planning (tickets/spec)
 - Product asks for extracting and saving data from health records: vaccinations and castration.
 - You have read‑only access to a Supabase Postgres database (details below).
-- Your task: write clear, developer‑ready tickets to extract these values and display them in a React app.
+- Your task: write clear, developer‑ready tickets to extract data, save them for later usage and display them in the React app.
 - Deliver your tickets in `Task_1_result.md`.
 
 Note: Part 1 includes both vaccinations and castration. In Part 2 you will implement vaccinations only.
 
 ### Part 2 — Implementation (vaccinations only)
-Build a minimal React + TypeScript app that reads from Supabase and extracts vaccinations really well and saves them to your data storage.
+Build extraction pipeline which will work on many different health records, latin words and doctor shortcuts. Pipeline will save data in place and structure of your choice. Then Build a React + TypeScript app with basic UI reading from your data store.
 1. A list page: show animal IDs with the latest vaccination date (each item links to the detail page).
 2. A detail page: show all vaccinations for a given animal.
 
-Technologies and approaches are comletely up to you.
+Technologies, frameworks, hosting and approach, all is completely up to you.
 
 #### Must‑haves
 - Read from Supabase
-- Use TypeScript
-- Final app in React
+- Use React + TypeScript
+- Store the parsed data
+- Present them in React app
 
 #### Deliverables
 - `Task_1_result.md`: tickets/spec for Part 1
