@@ -31,7 +31,7 @@ We simulate a realistic product request. The goal is clear; the details are up t
 Note: Part 1 includes both vaccinations and castration. In Part 2 you will implement vaccinations only.
 
 ### Part 2 — Implementation (vaccinations only)
-Build a minimal React + TypeScript app that reads from Supabase and extracts vaccinations and saves them to your data storage.
+Build a minimal React + TypeScript app that reads from Supabase and extracts vaccinations really well and saves them to your data storage.
 1. A list page: show animal IDs with the latest vaccination date (each item links to the detail page).
 2. A detail page: show all vaccinations for a given animal.
 
