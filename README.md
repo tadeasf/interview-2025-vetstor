@@ -1,77 +1,97 @@
-# VETSTOR Interview Assignment 
+# VETSTOR Interview Assignment
 
-## About Vetstor
+## About VETSTOR
 
 At [VETSTOR](https://www.vetstor.cz/), we’re on a mission to help pets live longer, healthier lives. Our platform connects veterinarians and pet owners through a personalized online store and smart pet profiles, so every product recommendation is based on real medical data, not guesswork. Vets can recommend and sell high-quality food, supplements, and medications directly through our e-commerce system, giving owners peace of mind that their pets’ nutrition plans are designed by professionals. Think HealthTech meets e-commerce, built for the people who love their pets most.
 
 We’re a young, funded startup with big ambitions. If you want to build tech that actually improves lives (and tails), keep reading.
 
+## The Role
 
 ## Job
 We’re looking for a Full-Stack Engineer (Medior++ / Senior) with a love for backend work to join our small but mighty team in Prague (some days in the office, some at home).
 
 Your main playground will be NodeJS + PostgreSQL, but you’ll also jump into the frontend when needed with React, TypeScript, and JavaScript. One week you might be designing a new backend service for AI-powered product recommendations, the next you’ll be tweaking a Shopify app or shipping a new Chrome extension feature. You’ll help keep our infrastructure minimal, clean, and fast, no over-engineered Kubernetes stacks here.
 
-## Interview process
-1. Screening Assignment - Homework (Only you) 1-2h
-1. Screening Interview (CPO or HR) 15m
-1. Technical interview (CTO) 1h-2h
-1. Final interview - formalities (CEO) - 20m
+## Interview Process
+1. Take‑home screening assignment (1–2h)
+2. Screening interview (CPO or HR, ~15m)
+3. Technical interview (CTO, 1–2h)
+4. Final chat (CEO, ~20m)
 
+## The Assignment (2 parts)
 
-# Assignment
-We're simulating real world coding task in our startup. Nothing is set in stone, only the goal. Simplicity, elegance of solution and execution matters. Time is limited. You dont want to burn days which you dont have in small startup.
+We simulate a realistic product request. The goal is clear; the details are up to you. We value clarity, simplicity, and execution.
 
-Assignment consists two tasks. First you get a high level goal a you finalise the technical details for devs to implementation (aka Jira tickets). Second one is about coding technical problem(s) and implementing solution.
+### Part 1 — Planning (tickets/spec)
+- Product asks for extracting and saving data from health records: vaccinations and castration.
+- You have read‑only access to a Supabase Postgres database (details below).
+- Your task: write clear, developer‑ready tickets to extract these values and display them in a React app.
+- Deliver your tickets in `Task_1_result.md`.
 
-## Rules
-For simplicity of this assignment you can assume anything, but mention all your assumption and explain them.
+Note: Part 1 includes both vaccinations and castration. In Part 2 you will implement vaccinations only.
 
-## 1. Preparing tasks
-Product manager comes with a goal of extracting data from health records. Specifically vaccinations and castration. You can find raw data in Supabase Postgres DB (bellow). Your job is to prepare tickets for development to successfully extract and display in React app these values.
+### Part 2 — Implementation (vaccinations only)
+Build a minimal React + TypeScript app that reads from Supabase and extracts vaccinations and saves them to your data storage.
+1. A list page: show animal IDs with the latest vaccination date (each item links to the detail page).
+2. A detail page: show all vaccinations for a given animal.
 
-Write down your tickets in Task_1_result.md
+Technologies and approaches are comletely up to you.
 
-## 2. Coding task
+#### Must‑haves
+- Read from Supabase
+- Use TypeScript
+- Final app in React
 
-### Requirements
-Two pages
-1. Display list of animal ID with latest vaccination with link to 2.
-1. Animal detail with all the vaccinations
+#### Deliverables
+- `Task_1_result.md`: tickets/spec for Part 1
+- Working app (code in a public repo; fork or your own)
+- Deployed URL we can click and test
+- Short write‑up of decisions/assumptions in `Task_2_comments.md` (or your README)
+- Email the repo link and app URL to jan-at-vetstor.com
 
-### Mandatory technology:
-* Read from Supabase
-* Typescript
-* React
+#### Recommendations
+- Keep it simple; choose tools appropriate for the job
+- Feel free to use AI tools and free tiers where helpful
+- Deploy whenever it’s useful for you
 
-### Steps
-1. Fork this repo
-1. Your job is to extract Vaccinations only, follow your tickets from part 1
-1. Display it in React app. 
-1. Commit (al the time) to the repo
-1. Deployed somewhere so we can try it. 
-1. Write shortly about why you did what did
-1. Send us the app URL andlink to your repo to jan-at-vetstor.com
+#### Timebox
+- Aim for 1–2 hours max. It’s fine to ship a focused slice that shows your approach and explain where would you go from there.
 
-### Recommendations
-Choose technologies suited for the job. Feel free to use all the AI thigs of these days. Many services have free or very cheap tiers. Deploy whenever you feel like the React app should be deployed. Save your data to any database you want to. 
+---
 
-You don't have to finish complete beautiful app, just show which direction you would go in the real world. 
-
-You have read access to this database for source.
+## Data Access (read‑only)
+Supabase project URL:
 
 ```
 https://vmmbjfycdefakulnyzhl.supabase.co
 ```
+
+Anon key (assignment‑scoped):
+
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZtbWJqZnljZGVmYWt1bG55emhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1OTQ3NDAsImV4cCI6MjA3MTE3MDc0MH0.GrkUW60Hm4vj68zazse1H1GIyg9A-hNx5CPYHpmM_nE
 ```
 
-### Ignore
-Any authentication
+Treat the key as public and limited to this assignment. Use it only for reading data.
 
-### Bonus points
-Write tests
-Creativity
-Simplicity
-Short and to the point, we don't have time to mess around and so do you
+---
+
+## Evaluation Criteria
+- Clarity of tickets/spec (assumptions, acceptance criteria, dependencies)
+- Correctness (vaccination extraction, latest date logic, handling missing/duplicate/edge cases)
+- Code quality (readability, structure, types)
+- UX (minimal, fast, easy to understand)
+- Simplicity (avoid unnecessary complexity)
+- Bonus: tests
+
+What we are not evaluating: pixel‑perfect UI, heavy infra, or complete production hardening.
+
+---
+
+## Getting Started (optional guidance)
+- You can scaffold with your preferred tool (Just must be React + TypeScript) and deploy to any host (e.g., Netlify, Vercel, Heroku...).
+- If using Supabase JS client: `@supabase/supabase-js` is the usual choice.
+- Document your assumptions and decisions in `Task_2_comments.md`.
+
+Good luck—and have fun. Keep it focused and pragmatic.
