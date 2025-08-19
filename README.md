@@ -79,10 +79,10 @@ Look at scripts/readData.ts how to read source.
 ---
 
 ## Evaluation Criteria
-- Clarity of tickets/spec (assumptions, acceptance criteria, dependencies)
-- Correctness (vaccination extraction, latest date logic, handling missing/duplicate/edge cases)
+- Correctness (vaccination extraction alghoritm, latest date logic, handling missing/duplicate/edge cases)
 - Code quality (readability, structure, types, tests)
 - Simplicity (avoid unnecessary complexity)
+- Clarity of tickets/spec (assumptions, acceptance criteria, dependencies)
 
 What we are not evaluating: pixel‑perfect UI, heavy infra, or complete production hardening.
 
