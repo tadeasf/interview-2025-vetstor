@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  ArrowUpDown,
   Calendar,
   RefreshCw,
   Search,
@@ -31,8 +32,13 @@ import {
 import { trpc } from "@/providers/trpc-provider";
 import type { AnimalWithLatestVaccinationClient } from "@/server/types";
 
+type SortField = 'animalId' | 'latestVaccinationDate' | 'latestVaccineName' | 'totalVaccinations' | 'status';
+type SortDirection = 'asc' | 'desc';
+
 export default function AnimalsList() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortField, setSortField] = useState<SortField>('animalId');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const {
     data: animals,
@@ -47,11 +53,42 @@ export default function AnimalsList() {
     },
   });
 
-  // Filter animals based on search term
-  const filteredAnimals =
-    animals?.filter((animal: AnimalWithLatestVaccinationClient) =>
+  // Filter and sort animals
+  const filteredAndSortedAnimals = (() => {
+    const filtered = animals?.filter((animal: AnimalWithLatestVaccinationClient) =>
       animal.animalId.toString().includes(searchTerm),
     ) || [];
+
+    return filtered.sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortField) {
+        case 'animalId':
+          comparison = a.animalId - b.animalId;
+          break;
+        case 'latestVaccinationDate':
+          const dateA = a.latestVaccinationDate ? new Date(a.latestVaccinationDate).getTime() : 0;
+          const dateB = b.latestVaccinationDate ? new Date(b.latestVaccinationDate).getTime() : 0;
+          comparison = dateA - dateB;
+          break;
+        case 'latestVaccineName':
+          const nameA = a.latestVaccineName || '';
+          const nameB = b.latestVaccineName || '';
+          comparison = nameA.localeCompare(nameB, 'cs-CZ');
+          break;
+        case 'totalVaccinations':
+          comparison = a.totalVaccinations - b.totalVaccinations;
+          break;
+        case 'status':
+          const statusA = a.latestVaccinationDate ? 1 : 0;
+          const statusB = b.latestVaccinationDate ? 1 : 0;
+          comparison = statusA - statusB;
+          break;
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  })();
 
   const formatDate = (date: string | null) => {
     if (!date) return "Žádná vakcinace";
@@ -65,6 +102,24 @@ export default function AnimalsList() {
   const handleProcessRecords = () => {
     processRecords.mutate();
   };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort(field)}>
+      <div className="flex items-center space-x-1">
+        <span>{children}</span>
+        <ArrowUpDown className="h-4 w-4" />
+      </div>
+    </TableHead>
+  );
 
   if (error) {
     return (
@@ -151,7 +206,7 @@ export default function AnimalsList() {
       )}
 
       {/* Animals table */}
-      {!isLoading && filteredAnimals.length > 0 && (
+      {!isLoading && filteredAndSortedAnimals.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Seznam zvířat</CardTitle>
@@ -163,15 +218,15 @@ export default function AnimalsList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID zvířete</TableHead>
-                  <TableHead>Poslední vakcinace</TableHead>
-                  <TableHead>Název vakcíny</TableHead>
-                  <TableHead>Celkem vakcinací</TableHead>
-                  <TableHead>Status</TableHead>
+                  <SortableHeader field="animalId">ID zvířete</SortableHeader>
+                  <SortableHeader field="latestVaccinationDate">Poslední vakcinace</SortableHeader>
+                  <SortableHeader field="latestVaccineName">Název vakcíny</SortableHeader>
+                  <SortableHeader field="totalVaccinations">Celkem vakcinací</SortableHeader>
+                  <SortableHeader field="status">Status</SortableHeader>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAnimals.map(
+                {filteredAndSortedAnimals.map(
                   (animal: AnimalWithLatestVaccinationClient) => (
                     <TableRow
                       key={animal.animalId}
@@ -211,7 +266,7 @@ export default function AnimalsList() {
       )}
 
       {/* Empty state */}
-      {!isLoading && filteredAnimals.length === 0 && animals && (
+      {!isLoading && filteredAndSortedAnimals.length === 0 && animals && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8 text-center">
             <Syringe className="h-12 w-12 text-muted-foreground mb-4" />

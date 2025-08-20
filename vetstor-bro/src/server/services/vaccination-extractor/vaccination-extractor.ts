@@ -68,11 +68,9 @@ export class VaccinationExtractor {
     const terapieVaccinations = VaccinationExtractor.extractFromTerapie(record);
     vaccinations.push(...terapieVaccinations);
 
-    // METHOD 3: Extract from report text (fallback method)
-    if (vaccinations.length === 0) {
-      const textVaccinations = VaccinationExtractor.extractFromText(record);
-      vaccinations.push(...textVaccinations);
-    }
+    // METHOD 3: Removed unreliable text extraction fallback
+    // If structured data (billItems, sections) doesn't contain vaccinations,
+    // we should not guess from unstructured text to maintain correctness
 
     return vaccinations;
   }

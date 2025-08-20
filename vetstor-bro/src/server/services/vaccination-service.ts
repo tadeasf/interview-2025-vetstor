@@ -45,9 +45,14 @@ export class VaccinationService {
     const animalIds = Array.from(VaccinationService.vaccinationCache.keys());
 
     animalIds.forEach((animalId) => {
-      const vaccinations =
+      const allVaccinations =
         VaccinationService.vaccinationCache.get(animalId) || [];
-      const sortedVaccinations = vaccinations.sort(
+
+      // With unreliable text extraction removed, all vaccinations should be high-confidence
+      // Keep filter as safety measure for any future low-confidence sources
+      const highConfidenceVaccinations = allVaccinations.filter(v => v.confidence >= 0.7);
+
+      const sortedVaccinations = highConfidenceVaccinations.sort(
         (a, b) =>
           new Date(b.vaccinationDate).getTime() -
           new Date(a.vaccinationDate).getTime(),
@@ -59,7 +64,7 @@ export class VaccinationService {
         animalId,
         latestVaccinationDate: latest ? latest.vaccinationDate : null,
         latestVaccineName: latest ? latest.vaccineName : null,
-        totalVaccinations: vaccinations.length,
+        totalVaccinations: highConfidenceVaccinations.length,
       });
     });
 
@@ -76,13 +81,15 @@ export class VaccinationService {
       await VaccinationService.initialize();
     }
 
-    const vaccinations =
+    const allVaccinations =
       VaccinationService.vaccinationCache.get(animalId) || [];
-    const sortedVaccinations = vaccinations.sort(
-      (a, b) =>
-        new Date(b.vaccinationDate).getTime() -
-        new Date(a.vaccinationDate).getTime(),
-    );
+
+    // Sort by date (newest first) and then by confidence (highest first)
+    const sortedVaccinations = allVaccinations.sort((a, b) => {
+      const dateComparison = new Date(b.vaccinationDate).getTime() - new Date(a.vaccinationDate).getTime();
+      if (dateComparison !== 0) return dateComparison;
+      return b.confidence - a.confidence;
+    });
 
     return {
       animalId,
