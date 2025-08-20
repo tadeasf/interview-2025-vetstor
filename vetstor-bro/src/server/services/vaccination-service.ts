@@ -41,10 +41,11 @@ export class VaccinationService {
 
     const animals: AnimalWithLatestVaccination[] = [];
 
-    // Get unique animal IDs from cache
-    const animalIds = Array.from(VaccinationService.vaccinationCache.keys());
+    // Get ALL unique animal IDs from raw records, not just those with vaccinations
+    const rawRecords = await SupabaseService.getAllRawRecords();
+    const allAnimalIds = [...new Set(rawRecords.map(record => record.pet_id))].sort((a, b) => a - b);
 
-    animalIds.forEach((animalId) => {
+    allAnimalIds.forEach((animalId) => {
       const allVaccinations =
         VaccinationService.vaccinationCache.get(animalId) || [];
 
@@ -68,7 +69,7 @@ export class VaccinationService {
       });
     });
 
-    return animals.sort((a, b) => a.animalId - b.animalId);
+    return animals; // Already sorted by animalId when we created allAnimalIds
   }
 
   /**
