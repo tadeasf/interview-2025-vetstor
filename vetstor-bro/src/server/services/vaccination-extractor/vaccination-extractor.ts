@@ -3,22 +3,15 @@
  */
 
 import type { RawRecord, SectionsData, Vaccination } from "../../types";
-import { PHARMA_COMPANIES, PROCESSING_CONFIG, VACCINATION_PATTERN_SEEDS } from "./constants";
+import { PHARMA_COMPANIES, PROCESSING_CONFIG } from "./constants";
 import type {
   ExtractionContext,
   ExtractionStats,
   LearnedPatternsData,
 } from "./types";
-import {
-  extractRelevantText,
-  normalizeVaccineName,
-} from "./utils/normalization";
-import {
-  detectVaccinationContext,
-  extractVaccineNamesAdvanced,
-  learnFromData,
-} from "./utils/pattern-learning";
 import { fuzzyMatchVaccineBrand } from "./utils/fuzzy-matching";
+import { normalizeVaccineName } from "./utils/normalization";
+import { learnFromData } from "./utils/pattern-learning";
 
 export class VaccinationExtractor {
   private static context: ExtractionContext = {
@@ -69,9 +62,12 @@ export class VaccinationExtractor {
     const terapieVaccinations = VaccinationExtractor.extractFromTerapie(record);
     vaccinations.push(...terapieVaccinations);
 
-    // METHOD 3: Removed unreliable text extraction fallback
-    // If structured data (billItems, sections) doesn't contain vaccinations,
-    // we should not guess from unstructured text to maintain correctness
+    // METHOD 3: Conservative text extraction for clear vaccine names only
+    if (vaccinations.length === 0) {
+      const conservativeTextVaccinations =
+        VaccinationExtractor.extractFromTextConservative(record);
+      vaccinations.push(...conservativeTextVaccinations);
+    }
 
     return vaccinations;
   }
@@ -83,11 +79,24 @@ export class VaccinationExtractor {
     const billItems = record.raw_record.billItems || [];
     const vaccinations: Vaccination[] = [];
 
-    if (billItems.length === 0) return [];
+    // Allow processing even with empty billItems - we'll check other conditions
+    if (billItems.length === 0) {
+      // Still check if report contains vaccination context
+      const reportText = record.raw_record.report.toLowerCase();
+      if (
+        !reportText.includes("vakcinac") &&
+        !reportText.includes("název: vakcinace")
+      ) {
+        return [];
+      }
+      // Continue to vaccine detection even with empty billItems
+    }
 
     // Check if this is a vaccination visit - check both report and bill items
     const reportText = record.raw_record.report.toLowerCase();
-    const hasVaccinationInReport = reportText.includes("vakcinac") || reportText.includes("název: vakcinace");
+    const hasVaccinationInReport =
+      reportText.includes("vakcinac") ||
+      reportText.includes("název: vakcinace");
     const hasVaccinationInBillItems = billItems.some((item) =>
       (item as string).toLowerCase().includes("vakcinace"),
     );
@@ -97,8 +106,12 @@ export class VaccinationExtractor {
     }
 
     // Also check for fuzzy brand matches in bill items to catch typos
-    const fuzzyBrandMatches = billItems.some((item) => {
-      const matchedBrands = fuzzyMatchVaccineBrand(item as string, PHARMA_COMPANIES, 0.85);
+    const _fuzzyBrandMatches = billItems.some((item) => {
+      const matchedBrands = fuzzyMatchVaccineBrand(
+        item as string,
+        PHARMA_COMPANIES,
+        0.85,
+      );
       return matchedBrands.length > 0;
     });
 
@@ -107,7 +120,11 @@ export class VaccinationExtractor {
       const lowerItem = (item as string).toLowerCase();
 
       // Check for fuzzy brand matches first
-      const fuzzyMatches = fuzzyMatchVaccineBrand(item as string, PHARMA_COMPANIES, 0.85);
+      const fuzzyMatches = fuzzyMatchVaccineBrand(
+        item as string,
+        PHARMA_COMPANIES,
+        0.85,
+      );
       if (fuzzyMatches.length > 0) {
         return true;
       }
@@ -158,7 +175,6 @@ export class VaccinationExtractor {
           lowerItem.includes("parainfluenza") ||
           // Common patterns
           lowerItem.includes("dávka") ||
-          lowerItem.includes("vakcinace") ||
           lowerItem.includes("vakcína") ||
           lowerItem.includes("očkování") ||
           lowerItem.includes("inj")) &&
@@ -171,9 +187,54 @@ export class VaccinationExtractor {
         !lowerItem.includes("jídlo") &&
         !lowerItem.includes("krmivo") &&
         !lowerItem.includes("odčerv") &&
-        !lowerItem.includes("antiparazit")
+        !lowerItem.includes("antiparazit") &&
+        // Exclude procedure codes, not actual vaccines
+        !lowerItem.includes("vakcinace kombinovaná") &&
+        !lowerItem.includes("vakcinace vzteklina") &&
+        !lowerItem.includes("vakcinace") // Generic "vakcinace" is usually a procedure, not vaccine name
       );
     });
+
+    // If no vaccine items in billItems but we have vaccination text, try to extract from report
+    if (
+      vaccineItems.length === 0 &&
+      billItems.length === 0 &&
+      hasVaccinationInReport
+    ) {
+      // Look for clear vaccine patterns in the report text when billItems are empty
+      const clearVaccinePatterns = [
+        /\b(nobivac)\s+(tricat|trio|dhpp?i?[+/]?l?4?r?|rabies|rl|dp\s*plus)\b/gi,
+        /\b(biocan)\s+(novel\s+)?(dhpp?i?[+/]?l?4?r?|pi[+/]?l4|l|t)\b/gi,
+        /\b(canigen)\s+(dhpp?i?[+/]?l?4?r?|ddpp?i?[+/]?l?4?)\b/gi,
+        // Standalone vaccine types
+        /\b(rabies|vzteklina)\b/gi,
+        /\b(rabies)\b/gi,
+      ];
+
+      clearVaccinePatterns.forEach((pattern, patternIndex) => {
+        const matches = reportText.match(pattern);
+        if (matches) {
+          matches.forEach((match, matchIndex) => {
+            const context = `Název: Vakcinace z textu\n\nOriginální text:\n${record.raw_record.report}`;
+            vaccinations.push({
+              id: `${VaccinationExtractor.generateId(
+                record.pet_id,
+                record.visit_id,
+              )}-report-${patternIndex}-${matchIndex}`,
+              animalId: record.pet_id,
+              vaccineName: normalizeVaccineName(
+                match.trim(),
+                VaccinationExtractor.context,
+              ),
+              vaccinationDate: new Date(record.visit_date),
+              sourceVisitId: record.visit_id,
+              confidence: 0.9, // High confidence for clear patterns
+              extractedText: context,
+            });
+          });
+        }
+      });
+    }
 
     vaccineItems.forEach((item, index) => {
       // Enhanced vaccine name cleaning
@@ -318,69 +379,57 @@ export class VaccinationExtractor {
   }
 
   /**
-   * Extract vaccinations from report text (fallback method)
+   * Conservative text extraction - only extract clear vaccine brand+type combinations
    */
-  private static extractFromText(record: RawRecord): Vaccination[] {
+  private static extractFromTextConservative(record: RawRecord): Vaccination[] {
     const vaccinations: Vaccination[] = [];
     const reportText = record.raw_record.report;
     const lowerText = reportText.toLowerCase();
 
-    // Multi-stage detection approach
-    const detectionResults = detectVaccinationContext(
-      lowerText,
-      VaccinationExtractor.context,
-    );
-
-    if (!detectionResults.isVaccination) {
-      return vaccinations;
+    // Only proceed if vaccination context is clearly present
+    if (!lowerText.includes("vakcinac") && !lowerText.includes("očkován")) {
+      return [];
     }
 
-    // Extract vaccine names using learned patterns and fuzzy matching
-    const foundVaccines = extractVaccineNamesAdvanced(
-      lowerText,
-      VaccinationExtractor.context,
-    );
+    // Look for clear brand + type combinations
+    const clearVaccinePatterns = [
+      /\b(nobivac)\s+(tricat|trio|dhpp?i?[+/]?l?4?r?|rabies|rl|dp\s*plus)\b/gi,
+      /\b(biocan)\s+(novel\s+)?(dhpp?i?[+/]?l?4?r?|pi[+/]?l4|l|t)\b/gi,
+      /\b(canigen)\s+(dhpp?i?[+/]?l?4?r?|ddpp?i?[+/]?l?4?)\b/gi,
+      /\b(feligen)\s+(crp?)\b/gi,
+      /\b(biofel)\s+(pch)\b/gi,
+      /\b(versican)\s+(plus\s+)?(dhpp?i?[+/]?l?4?r?)\b/gi,
+      /\b(purevax)\s+(rcpch\s+felv?)\b/gi,
+      /\b(pestorin)\s+(mormyx)\b/gi,
+      /\b(eurican)\s+\w+/gi,
+      // Standalone vaccine types (high confidence when context is clear)
+      /\b(rabies|vzteklina)\b/gi,
+    ];
 
-    if (foundVaccines.length === 0) {
-      // Create generic vaccination record with high confidence if context is strong
-      const vaccination: Vaccination = {
-        id: VaccinationExtractor.generateId(record.pet_id, record.visit_id),
-        animalId: record.pet_id,
-        vaccineName: "Nespecifikovaná vakcinace",
-        vaccinationDate: new Date(record.visit_date),
-        sourceVisitId: record.visit_id,
-        confidence: detectionResults.confidence * 0.5, // Lower confidence for fallback
-        extractedText: extractRelevantText(
-          reportText,
-          VACCINATION_PATTERN_SEEDS,
-        ),
-      };
-      vaccinations.push(vaccination);
-    } else {
-      // Create vaccination records for each identified vaccine
-      foundVaccines.forEach((vaccineInfo, index) => {
-        const vaccination: Vaccination = {
-          id:
-            VaccinationExtractor.generateId(record.pet_id, record.visit_id) +
-            `-text-${index}`,
-          animalId: record.pet_id,
-          vaccineName: normalizeVaccineName(
-            vaccineInfo.name,
-            VaccinationExtractor.context,
-          ),
-          vaccinationDate: new Date(record.visit_date),
-          sourceVisitId: record.visit_id,
-          confidence: Math.min(
-            detectionResults.confidence + vaccineInfo.confidence,
-            1.0,
-          ),
-          extractedText:
-            vaccineInfo.context ||
-            extractRelevantText(reportText, VACCINATION_PATTERN_SEEDS),
-        };
-        vaccinations.push(vaccination);
-      });
-    }
+    clearVaccinePatterns.forEach((pattern, index) => {
+      const matches = reportText.match(pattern);
+      if (matches) {
+        matches.forEach((match) => {
+          const cleanMatch = match.trim();
+          const context = `Textová extrakce: ${reportText}`;
+
+          vaccinations.push({
+            id:
+              VaccinationExtractor.generateId(record.pet_id, record.visit_id) +
+              `-text-${index}`,
+            animalId: record.pet_id,
+            vaccineName: normalizeVaccineName(
+              cleanMatch,
+              VaccinationExtractor.context,
+            ),
+            vaccinationDate: new Date(record.visit_date),
+            sourceVisitId: record.visit_id,
+            confidence: 0.85, // High confidence for clear brand+type matches
+            extractedText: context,
+          });
+        });
+      }
+    });
 
     return vaccinations;
   }

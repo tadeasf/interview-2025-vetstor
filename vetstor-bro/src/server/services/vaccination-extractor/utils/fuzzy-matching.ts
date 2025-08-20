@@ -67,13 +67,20 @@ export function extractContextAroundMatch(text: string, match: string): string {
 /**
  * Fuzzy match for vaccine brand names to handle typos
  */
-export function fuzzyMatchVaccineBrand(text: string, brands: string[], threshold = 0.85): string[] {
+export function fuzzyMatchVaccineBrand(
+  text: string,
+  brands: string[],
+  threshold = 0.85,
+): string[] {
   const words = text.split(/\s+/);
   const matchedBrands: string[] = [];
 
   for (const word of words) {
     for (const brand of brands) {
-      const similarity = calculateSimilarity(word.toLowerCase(), brand.toLowerCase());
+      const similarity = calculateSimilarity(
+        word.toLowerCase(),
+        brand.toLowerCase(),
+      );
       if (similarity >= threshold) {
         matchedBrands.push(brand);
       }

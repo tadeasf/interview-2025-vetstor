@@ -43,7 +43,9 @@ export class VaccinationService {
 
     // Get ALL unique animal IDs from raw records, not just those with vaccinations
     const rawRecords = await SupabaseService.getAllRawRecords();
-    const allAnimalIds = [...new Set(rawRecords.map(record => record.pet_id))].sort((a, b) => a - b);
+    const allAnimalIds = [
+      ...new Set(rawRecords.map((record) => record.pet_id)),
+    ].sort((a, b) => a - b);
 
     allAnimalIds.forEach((animalId) => {
       const allVaccinations =
@@ -51,7 +53,9 @@ export class VaccinationService {
 
       // With unreliable text extraction removed, all vaccinations should be high-confidence
       // Keep filter as safety measure for any future low-confidence sources
-      const highConfidenceVaccinations = allVaccinations.filter(v => v.confidence >= 0.7);
+      const highConfidenceVaccinations = allVaccinations.filter(
+        (v) => v.confidence >= 0.7,
+      );
 
       const sortedVaccinations = highConfidenceVaccinations.sort(
         (a, b) =>
@@ -87,7 +91,9 @@ export class VaccinationService {
 
     // Sort by date (newest first) and then by confidence (highest first)
     const sortedVaccinations = allVaccinations.sort((a, b) => {
-      const dateComparison = new Date(b.vaccinationDate).getTime() - new Date(a.vaccinationDate).getTime();
+      const dateComparison =
+        new Date(b.vaccinationDate).getTime() -
+        new Date(a.vaccinationDate).getTime();
       if (dateComparison !== 0) return dateComparison;
       return b.confidence - a.confidence;
     });
