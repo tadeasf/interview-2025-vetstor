@@ -18,6 +18,12 @@ export const PHARMA_COMPANIES = [
   "biocan",
   "canigen",
   "feligen",
+  "biofel",
+  "versican",
+  "purevax",
+  "pestorin",
+  "eurican",
+  "tetradog",
   "merial",
   "virbac",
   "pfizer",
@@ -44,27 +50,60 @@ export const VACCINE_NORMALIZATION_MAP: Record<string, string> = {
   tricat: "Tricat",
   trio: "Trio",
   dhppi: "DHPPI",
+  dhpp: "DHPP",
   dhppil4: "DHPPI+L4",
   "dhppi+l4": "DHPPI+L4",
   "dhppi/l4": "DHPPI+L4",
+  "dhppi/l4r": "DHPPI+L4R",
   rabies: "Rabies",
   vzteklina: "Vzteklina (Rabies)",
   puppy: "Puppy",
   štěňátka: "Štěňátka (Puppy)",
   l4: "Leptospira L4",
   ddppi: "DDPPI",
+  crp: "CRP",
+  pch: "PCH",
+  mormyx: "Mormyx",
 
-  // Brand combinations
+  // Brand combinations - Nobivac
   "nobivac trio": "Nobivac Trio",
+  "nobivac tricat trio": "Nobivac Tricat Trio",
   "nobivac dhppi": "Nobivac DHPPI",
+  "nobivac dhpp": "Nobivac DHPP",
   "nobivac dhppi+l4": "Nobivac DHPPI+L4",
   "nobivac dhppil4": "Nobivac DHPPI+L4",
+  "nobivac l4": "Nobivac L4",
+  "nobivac rabies": "Nobivac Rabies",
+  "nobivac rl": "Nobivac RL",
+  "nobivac dp plus": "Nobivac DP Plus",
+
+  // Brand combinations - Biocan
   "biocan novel": "Biocan Novel",
+  "biocan novel dhppi": "Biocan Novel DHPPI",
+  "biocan novel dhppi/l4": "Biocan Novel DHPPI/L4",
+  "biocan novel dhppi/l4r": "Biocan Novel DHPPI/L4R",
+  "biocan novel pi/l4": "Biocan Novel Pi/L4",
   "biocan dhppi": "Biocan DHPPI",
-  "biocan dhppi/l4": "Biocan DHPPI+L4",
+  "biocan dhppi/l4": "Biocan DHPPI/L4",
+  "biocan l": "Biocan L",
+  "biocan t": "Biocan T",
+
+  // Brand combinations - Canigen
   "canigen ddppi": "Canigen DDPPI",
-  "canigen ddppi/l": "Canigen DDPPI+L",
+  "canigen ddppi/l": "Canigen DDPPI/L",
+  "canigen dhppi": "Canigen DHPPI",
+  "canigen dhppi/l": "Canigen DHPPI/L",
+
+  // Brand combinations - Feligen & Biofel
   "feligen crp": "Feligen CRP",
+  "biofel pch": "Biofel PCH",
+
+  // Brand combinations - Others
+  "versican plus dhppi": "Versican Plus DHPPI",
+  "versican plus dhppi/l4": "Versican Plus DHPPI/L4",
+  "versican plus dhppi/l4r": "Versican Plus DHPPI/L4R",
+  "purevax rcpch felv": "Purevax RCPCh FeLV",
+  "pestorin mormyx": "Pestorin Mormyx",
 };
 
 // Brand patterns for compound names

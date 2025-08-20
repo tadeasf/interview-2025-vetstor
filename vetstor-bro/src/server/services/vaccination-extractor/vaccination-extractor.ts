@@ -86,10 +86,9 @@ export class VaccinationExtractor {
 
     if (billItems.length === 0) return [];
 
-    // Check if this is a vaccination visit
-    const hasVaccinationInReport = record.raw_record.report
-      .toLowerCase()
-      .includes("vakcinac");
+    // Check if this is a vaccination visit - check both report and bill items
+    const reportText = record.raw_record.report.toLowerCase();
+    const hasVaccinationInReport = reportText.includes("vakcinac") || reportText.includes("název: vakcinace");
     const hasVaccinationInBillItems = billItems.some((item) =>
       (item as string).toLowerCase().includes("vakcinace"),
     );
@@ -98,32 +97,69 @@ export class VaccinationExtractor {
       return [];
     }
 
-    // Extract vaccine products from bill items
+    // Enhanced vaccine product detection from bill items
     const vaccineItems = billItems.filter((item) => {
       const lowerItem = (item as string).toLowerCase();
       return (
+        // Specific vaccine brands
         (lowerItem.includes("biocan") ||
           lowerItem.includes("nobivac") ||
           lowerItem.includes("canigen") ||
           lowerItem.includes("eurican") ||
           lowerItem.includes("tetradog") ||
+          lowerItem.includes("biofel") ||
+          lowerItem.includes("feligen") ||
+          lowerItem.includes("versican") ||
+          lowerItem.includes("purevax") ||
+          lowerItem.includes("pestorin") ||
+          // Vaccine types
           lowerItem.includes("dhppi") ||
-          lowerItem.includes("pi/l") ||
-          lowerItem.includes("dávka")) &&
+          lowerItem.includes("dhpp") ||
+          lowerItem.includes("crp") ||
+          lowerItem.includes("pch") ||
+          lowerItem.includes("tricat") ||
+          lowerItem.includes("trio") ||
+          lowerItem.includes("rabies") ||
+          lowerItem.includes("l4") ||
+          lowerItem.includes("mormyx") ||
+          // Common patterns
+          lowerItem.includes("dávka") ||
+          lowerItem.includes("inj")) &&
+        // Exclude non-vaccine items
         !lowerItem.includes("spotřební") &&
-        !lowerItem.includes("materiál")
+        !lowerItem.includes("materiál") &&
+        !lowerItem.includes("klinické") &&
+        !lowerItem.includes("vyšetření") &&
+        !lowerItem.includes("generické") &&
+        !lowerItem.includes("jídlo")
       );
     });
 
     vaccineItems.forEach((item, index) => {
-      // Clean up vaccine name
-      const vaccineName = (item as string)
-        .replace(/\s*\([^)]*\)\s*$/, "") // Remove parentheses
-        .replace(/\s*\d+x\d+\s*dávka.*$/, "") // Remove dosage
+      // Enhanced vaccine name cleaning
+      let vaccineName = (item as string)
+        .replace(/\s*\([^)]*\)\s*$/, "") // Remove product codes in parentheses
+        .replace(/\s*\d+x?\d*\s*dávka.*$/i, "") // Remove dosage info
+        .replace(/\s*\d+x?\d*ml.*$/i, "") // Remove volume info
+        .replace(/\s*\d+x?\d*ds.*$/i, "") // Remove dose pack info
+        .replace(/\s*inj\s*sic\s*$/i, "") // Remove 'inj sic'
+        .replace(/\s*a\.u\.v\.\s*inj.*$/i, "") // Remove 'a.u.v. inj'
+        .replace(/\s*lyofilizát.*$/i, "") // Remove 'lyofilizát a rozpouštědlo...'
+        .replace(/\s*-\s*\d+\s*dávka.*$/i, "") // Remove '- 1 dávka'
+        .replace(/\s*-\s*počet:.*$/i, "") // Remove '- počet: 1.00'
         .trim();
 
-      if (vaccineName.length > 2) {
-        const context = `${record.raw_record.report}\n\nVakcinační přípravky z faktury:\n${(billItems as string[]).join("\n")}`;
+      // Further normalize common patterns
+      vaccineName = vaccineName
+        .replace(/dhppi\/l4r?/gi, "DHPPI/L4R")
+        .replace(/dhppi\/l/gi, "DHPPI/L")
+        .replace(/dhppi\+l4/gi, "DHPPI+L4")
+        .replace(/novel\s+dhppi/gi, "Novel DHPPI")
+        .replace(/tricat\s+trio/gi, "Tricat Trio")
+        .replace(/plus\s+dhppi/gi, "Plus DHPPI");
+
+      if (vaccineName.length > 3) {
+        const context = `Název: ${reportText.includes("název:") ? reportText.match(/název:\s*([^\n]*)/i)?.[1] || "Vakcinace" : "Vakcinace"}\n\nVakcinační přípravky z faktury:\n${(billItems as string[]).join("\n")}\n\nZelný text zprávy:\n${record.raw_record.report}`;
 
         vaccinations.push({
           id:
@@ -136,7 +172,7 @@ export class VaccinationExtractor {
           ),
           vaccinationDate: new Date(record.visit_date),
           sourceVisitId: record.visit_id,
-          confidence: 0.9,
+          confidence: 0.95, // High confidence for bill items
           extractedText: context,
         });
       }
