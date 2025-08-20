@@ -3,7 +3,7 @@
  */
 
 import type { RawRecord, SectionsData, Vaccination } from "../../types";
-import { PROCESSING_CONFIG, VACCINATION_PATTERN_SEEDS } from "./constants";
+import { PHARMA_COMPANIES, PROCESSING_CONFIG, VACCINATION_PATTERN_SEEDS } from "./constants";
 import type {
   ExtractionContext,
   ExtractionStats,
@@ -18,6 +18,7 @@ import {
   extractVaccineNamesAdvanced,
   learnFromData,
 } from "./utils/pattern-learning";
+import { fuzzyMatchVaccineBrand } from "./utils/fuzzy-matching";
 
 export class VaccinationExtractor {
   private static context: ExtractionContext = {
@@ -95,11 +96,24 @@ export class VaccinationExtractor {
       return [];
     }
 
+    // Also check for fuzzy brand matches in bill items to catch typos
+    const fuzzyBrandMatches = billItems.some((item) => {
+      const matchedBrands = fuzzyMatchVaccineBrand(item as string, PHARMA_COMPANIES, 0.85);
+      return matchedBrands.length > 0;
+    });
+
     // Enhanced vaccine product detection from bill items
     const vaccineItems = billItems.filter((item) => {
       const lowerItem = (item as string).toLowerCase();
+
+      // Check for fuzzy brand matches first
+      const fuzzyMatches = fuzzyMatchVaccineBrand(item as string, PHARMA_COMPANIES, 0.85);
+      if (fuzzyMatches.length > 0) {
+        return true;
+      }
+
       return (
-        // Specific vaccine brands
+        // Specific vaccine brands (expanded)
         (lowerItem.includes("biocan") ||
           lowerItem.includes("nobivac") ||
           lowerItem.includes("canigen") ||
@@ -110,18 +124,43 @@ export class VaccinationExtractor {
           lowerItem.includes("versican") ||
           lowerItem.includes("purevax") ||
           lowerItem.includes("pestorin") ||
-          // Vaccine types
+          lowerItem.includes("bioveta") ||
+          lowerItem.includes("biomune") ||
+          lowerItem.includes("galaxy") ||
+          lowerItem.includes("duramune") ||
+          lowerItem.includes("vanguard") ||
+          lowerItem.includes("recombitek") ||
+          lowerItem.includes("fel-o-vax") ||
+          lowerItem.includes("spectra") ||
+          // Vaccine types (expanded)
           lowerItem.includes("dhppi") ||
           lowerItem.includes("dhpp") ||
           lowerItem.includes("crp") ||
           lowerItem.includes("pch") ||
           lowerItem.includes("tricat") ||
+          lowerItem.includes("tetracat") ||
           lowerItem.includes("trio") ||
           lowerItem.includes("rabies") ||
+          lowerItem.includes("vzteklina") ||
+          lowerItem.includes("lyssa") ||
           lowerItem.includes("l4") ||
+          lowerItem.includes("lepto") ||
           lowerItem.includes("mormyx") ||
+          lowerItem.includes("calici") ||
+          lowerItem.includes("fcv") ||
+          lowerItem.includes("fvr") ||
+          lowerItem.includes("felv") ||
+          lowerItem.includes("fiv") ||
+          lowerItem.includes("panleuko") ||
+          lowerItem.includes("corona") ||
+          lowerItem.includes("cpv") ||
+          lowerItem.includes("bordetella") ||
+          lowerItem.includes("parainfluenza") ||
           // Common patterns
           lowerItem.includes("dávka") ||
+          lowerItem.includes("vakcinace") ||
+          lowerItem.includes("vakcína") ||
+          lowerItem.includes("očkování") ||
           lowerItem.includes("inj")) &&
         // Exclude non-vaccine items
         !lowerItem.includes("spotřební") &&
@@ -129,7 +168,10 @@ export class VaccinationExtractor {
         !lowerItem.includes("klinické") &&
         !lowerItem.includes("vyšetření") &&
         !lowerItem.includes("generické") &&
-        !lowerItem.includes("jídlo")
+        !lowerItem.includes("jídlo") &&
+        !lowerItem.includes("krmivo") &&
+        !lowerItem.includes("odčerv") &&
+        !lowerItem.includes("antiparazit")
       );
     });
 
@@ -145,6 +187,12 @@ export class VaccinationExtractor {
         .replace(/\s*lyofilizát.*$/i, "") // Remove 'lyofilizát a rozpouštědlo...'
         .replace(/\s*-\s*\d+\s*dávka.*$/i, "") // Remove '- 1 dávka'
         .replace(/\s*-\s*počet:.*$/i, "") // Remove '- počet: 1.00'
+        .replace(/\s*\d+\s*tbl.*$/i, "") // Remove tablet info
+        .replace(/\s*por\s*sus.*$/i, "") // Remove 'por sus'
+        .replace(/\s*rozpouštědlo.*$/i, "") // Remove diluent info
+        .replace(/\s*vial.*$/i, "") // Remove vial info
+        .replace(/\s*amp.*$/i, "") // Remove ampoule info
+        .replace(/\s*\d+x\d+.*$/i, "") // Remove pack size info
         .trim();
 
       // Further normalize common patterns
@@ -194,16 +242,51 @@ export class VaccinationExtractor {
     // Check if this is a vaccination record
     if (!anamneza.includes("očkov")) return [];
 
-    // Extract vaccine names from terapie
+    // Extract vaccine names from terapie (expanded list)
     const vaccineKeywords = [
+      // Brands
       "eurican",
       "nobivac",
       "biocan",
       "tetradog",
       "canigen",
+      "feligen",
+      "biofel",
+      "versican",
+      "purevax",
+      "pestorin",
+      "bioveta",
+      "biomune",
+      "galaxy",
+      "duramune",
+      "vanguard",
+      "recombitek",
+      // Types
       "dhppi",
-      "cestal",
-      "drontal",
+      "dhpp",
+      "tricat",
+      "trio",
+      "rabies",
+      "vzteklina",
+      "lyssa",
+      "l4",
+      "lepto",
+      "crp",
+      "pch",
+      "mormyx",
+      "calici",
+      "fcv",
+      "fvr",
+      "felv",
+      "panleuko",
+      "corona",
+      "bordetella",
+      // Generic terms
+      "vakcinace",
+      "vakcína",
+      "očkování",
+      // Exclude deworming (not vaccines)
+      // "cestal", "drontal" removed as they're dewormers
     ];
 
     const foundVaccines = vaccineKeywords.filter((keyword) =>

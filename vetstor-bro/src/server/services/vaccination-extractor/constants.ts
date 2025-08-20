@@ -28,20 +28,31 @@ export const PHARMA_COMPANIES = [
   "virbac",
   "pfizer",
   "msd",
+  "bioveta", // Czech manufacturer
+  "biomune", // Additional brand
+  "galaxy", // Vaccine series
+  "fel-o-vax", // Feline vaccines
+  "duramune", // Canine vaccines
+  "recombitek", // Combination vaccines
+  "vanguard", // Protection series
+  "spectra", // Broad spectrum
 ];
 
 // Common vaccine type patterns
 export const VACCINE_TYPE_PATTERNS = [
-  /\b(dhpp?i?[+/]?l?4?)\b/gi,
-  /\b(rabies|vzteklina)\b/gi,
-  /\b(trio|tricat)\b/gi,
-  /\b(puppy|štěňátka)\b/gi,
-  /\b(parvo|distemper)\b/gi,
-  /\b(hepatitis|adenovir)\b/gi,
-  /\b(parainfluenza)\b/gi,
-  /\b(leptospira|l4)\b/gi,
-  /\b(bordetella)\b/gi,
-  /\b(kennel\s*cough)\b/gi,
+  /\b(dhpp?i?[+/]?l?4?r?)\b/gi, // Extended to include R (rabies)
+  /\b(rabies|vzteklina|lyssa)\b/gi, // Added lyssa
+  /\b(trio|tricat|tetracat)\b/gi, // Added tetracat
+  /\b(puppy|štěňátka|junior)\b/gi, // Added junior
+  /\b(parvo|distemper|parvovir)\b/gi, // Added parvovir
+  /\b(hepatitis|adenovir|cav)\b/gi, // Added CAV
+  /\b(parainfluenza|pi)\b/gi, // Added PI abbreviation
+  /\b(leptospira|l4|lepto)\b/gi, // Added lepto
+  /\b(bordetella|kennel\s*cough|bb)\b/gi, // Added BB abbreviation
+  /\b(calici|fvr|fcv)\b/gi, // Feline vaccines
+  /\b(panleuko|felv|fiv)\b/gi, // More feline vaccines
+  /\b(corona|cpv)\b/gi, // Corona and CPV
+  /\b(bivalent|multivalent)\b/gi, // Vaccine types
 ];
 
 // Enhanced normalization map with brand + type combinations
@@ -104,6 +115,27 @@ export const VACCINE_NORMALIZATION_MAP: Record<string, string> = {
   "versican plus dhppi/l4r": "Versican Plus DHPPI/L4R",
   "purevax rcpch felv": "Purevax RCPCh FeLV",
   "pestorin mormyx": "Pestorin Mormyx",
+
+  // Additional vaccine types
+  tetracat: "Tetracat",
+  lyssa: "Lyssa (Rabies)",
+  lepto: "Leptospira",
+  pi: "Parainfluenza",
+  cav: "Canine Adenovirus",
+  bb: "Bordetella",
+  fcv: "Feline Calicivirus",
+  fvr: "Feline Viral Rhinotracheitis",
+  felv: "Feline Leukemia",
+  fiv: "Feline Immunodeficiency",
+  panleuko: "Panleukopenia",
+  cpv: "Canine Parvovirus",
+
+  // New brand combinations
+  "bioveta dhppi": "Bioveta DHPPI",
+  "galaxy dhpp": "Galaxy DHPP",
+  "duramune dhpp": "Duramune DHPP",
+  "vanguard plus": "Vanguard Plus",
+  "recombitek c4": "Recombitek C4",
 };
 
 // Brand patterns for compound names
